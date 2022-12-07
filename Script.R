@@ -2,6 +2,8 @@
 
 # Cargar las bases
 
+rm(list=ls())
+
 require(pacman)
 p_load(skimr, reshape)
 
@@ -11,9 +13,9 @@ colnames(a) <- tolower(colnames(a))
 
 skim(a)
 
-b <- subset(a, select = -c(p4030s1a1, p4030s4a1, dia_ref, f_exp_viv))
+a <- subset(a, select = -c(p4030s1a1, p4030s4a1, dia_ref, f_exp_viv)) ## dejar las variables a usar
 
-names <- c(tipo_vivienda = "p424")
+names <- c(directorio = "vivienda", p424 = "tipo_vivienda") ## vercotr de nombres
 
-
+a <- rename(a, names) ## asignar nuevo nombre a las variables
 
