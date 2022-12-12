@@ -394,11 +394,24 @@ g$X<-NULL
 
 base <- merge(x = a, y = b, all=T)
 base <- merge(x = base, y = c, all=T)
-base <- merge(x = merge(x = merge(x = merge(x = base, y = d, all=T), y = e, all=T), y = f, all=T), y = g, all=T)
+base <- merge(x = merge(x = merge(x = base, y = d, all=T), y = f, all=T), y = g, all=T)
 
 write.csv(base, file = "Data/base_final.csv")
+base <- read.csv(file = "Data/base_final.csv", header = T)
+base$X<-NULL
+
+base <- base[!is.na(base$ind),] #### quitar na
+base <- base[!is.na(base$tipo_vivienda),]
+base <- base[!is.na(base$leer_escribir),]
+
+
+#base <- na.omit(base)
 
 skim(base)
+
+write.csv(base, file = "Data/base_final_na.csv")
+base <- read.csv(file = "Data/base_final_na.csv", header = T)
+base$X<-NULL
 
 
 
