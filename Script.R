@@ -367,3 +367,78 @@ C_8$Tiempo_labores_no_rem <-(C_8$H_tot+C_8$m)
 C_8<-subset(C_8, select = c(vivienda,hogar,ind,Tiempo_labores_no_rem ))
 
 write.csv(C_8,file = "Data/c_8.csv")
+
+
+## Implementación modelo XGBoost
+c1<- c(names(test))
+c2<- c(names(training_set))
+
+ct <- intersect(c1,c2)
+
+training_set<-subset(train,select=c(ct))
+test<-subset(test,select=c(ct))
+
+# XGBoost
+
+## set n-folds
+set.seed(234)
+db_folds <- vfold_cv(data=training_set, v=5 , strata=price)
+db_folds
+
+## set metrics
+db_metrics <- metric_set(yardstick::rmse, yardstick::rsq, ccc) ## para categoricas, la última es la función de perdida. RMSE para regresion
+
+## Boosted Tree Model Specification
+xgb_spec <- boost_tree(trees = 1000,
+                       tree_depth = tune(),
+                       min_n = tune(),
+                       mtry = tune(),
+                       sample_size = tune(),
+                       learn_rate = tune()) %>%
+  set_engine("xgboost") %>%
+  set_mode("regression") ## para regresión cambiar classification por regress
+xgb_spec
+
+## workflow
+xgb_word_wf <- workflow(train_recipe, xgb_spec)
+
+## tunne hiperparametros
+xgb_grid <- grid_max_entropy(tree_depth(c(5L, 10L)),
+                             min_n(c(10L, 40L)),
+                             mtry(c(5L, 10L)), 
+                             sample_prop(c(0.5, 1.0)), 
+                             learn_rate(c(-2, -1)),
+                             size = 20)
+xgb_grid
+
+## estimate model
+tic()
+xgb_word_rs <- tune_race_anova(object = xgb_word_wf,
+                               resamples = db_folds,
+                               grid = xgb_grid,
+                               metrics = db_metrics,
+                               control = control_race(verbose_elim = T))
+toc()
+
+saveRDS(xgb_word_rs, file = "data/xgb_word_rs.rds")
+
+##=== **3. Desempeño del modelo** ===##
+
+## plot model
+plot_race(xgb_word_rs) + labs(title = "Gráfico 1: Grafico de RMSE ",
+                              y = "RMSE",
+                              x = "Fold")
+
+## best model
+show_best(xgb_word_rs)
+
+## xgboost model
+xgb_last <- xgb_word_wf %>%
+  finalize_workflow(select_best(xgb_word_rs, "rmse")) 
+
+xgb_last
+
+predictions %>%
+  autoplot() + theme_light()
+
+
