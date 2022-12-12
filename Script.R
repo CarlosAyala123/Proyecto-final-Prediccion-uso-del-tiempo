@@ -520,7 +520,7 @@ thatm_xg
 
 write.csv(thatm_xg,file="Data/thatm_xg.csv",row.names=F)
 
-(MSE_xgb <- mean((thatm_xg - m_test$tiempo_labores_no_rem)^2))
+(MSE_xgb <- mean((thatm_xg - m_test$tiempo_labores_no_rem)^2)) ### 16512.18
 
 ## Implementación modelo XGBoost hombre
 tr_h<-data.matrix(subset(h_train,select=c(-vivienda,-hogar,-ind,-tiempo_labores_no_rem)))
@@ -570,7 +570,7 @@ xg_mod_h <- xgboost(data = dtest_h, params = best_param, nround = nround, verbos
 
 xg_mod_h
 
-saveRDS(xg_mod_h, file = "Data/xg_mod_m.rds")
+saveRDS(xg_mod_h, file = "Data/xg_mod_h.rds")
 
 
 
@@ -581,7 +581,7 @@ thath_xg
 
 write.csv(thath_xg,file="Data/thath_xg.csv",row.names=F)
 
-(MSE_xgbh <- mean((thath_xg - h_test$tiempo_labores_no_rem)^2))
+(MSE_xgbh <- mean((thath_xg - h_test$tiempo_labores_no_rem)^2)) ### 7876.5
 
 
 
