@@ -11,7 +11,7 @@ cat("\f")
 require(pacman)
 p_load(tidyverse,dplyr,here,skimr,tidyr,gamlr,modelsummary,caret,
        rio,knitr, kableExtra, rstudioapi,tidymodels,janitor,MLmetrics,
-       reshape,rattle,doParallel,mixgb, install = TRUE)
+       reshape,rattle,doParallel,mixgb, tictoc, install = TRUE)
 
 p_load(mltools, xgboost,
        mixgb, vctrs,
@@ -416,41 +416,50 @@ base$X<-NULL
 
 table(base$mujer)
 
+
+# Mujer
+
 mujer <- subset(base, mujer == 1)
 mujer$mujer<-NULL
 
-hombre <- subset(base, mujer == 0)
-hombre$mujer<-NULL
-
-
-
-#>>>Splitting the sample
-
 ## 75% of the sample size
-smp_size <- floor(0.75 * nrow(df))
+smp_size <- floor(0.75 * nrow(mujer))
 
 ## set the seed to make your partition reproducible
 set.seed(10101)
 
-train_ind <- sample(seq_len(nrow(df)), size = smp_size)
+train_ind <- sample(seq_len(nrow(mujer)), size = smp_size)
 
-train <- df[train_ind, ]
-test <- df[-train_ind, ]
+m_train <- mujer[train_ind, ]
+m_test <- mujer[-train_ind, ]
+
+# Hombre
+
+hombre <- subset(base, mujer == 0)
+hombre$mujer<-NULL
+
+## 75% of the sample size
+smp_size <- floor(0.75 * nrow(hombre))
+
+## set the seed to make your partition reproducible
+set.seed(10101)
+
+train_ind <- sample(seq_len(nrow(hombre)), size = smp_size)
+
+h_train <- hombre[train_ind, ]
+h_test <- hombre[-train_ind, ]
+
+
 
 ## Implementación modelo XGBoost
-c1<- c(names(test))
-c2<- c(names(training_set))
 
-ct <- intersect(c1,c2)
-
-training_set<-subset(train,select=c(ct))
-test<-subset(test,select=c(ct))
+## Mujer
 
 # XGBoost
 
 ## set n-folds
 set.seed(234)
-db_folds <- vfold_cv(data=training_set, v=5 , strata=price)
+db_folds <- vfold_cv(data=m_train, v=10 , strata=NULL)
 db_folds
 
 ## set metrics
@@ -488,7 +497,7 @@ xgb_word_rs <- tune_race_anova(object = xgb_word_wf,
                                control = control_race(verbose_elim = T))
 toc()
 
-saveRDS(xgb_word_rs, file = "data/xgb_word_rs.rds")
+saveRDS(xgb_word_rs, file = "Data/xgb_word_rs_mujer.rds")
 
 ##=== **3. Desempeño del modelo** ===##
 
