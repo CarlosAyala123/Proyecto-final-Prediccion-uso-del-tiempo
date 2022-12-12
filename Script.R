@@ -18,6 +18,13 @@ p_load(mltools, xgboost,
        mlr, spdep,
        install = T)
 
+p_load(tidyverse,rio,glue,
+       hexbin,
+       patchwork,vip, ## plot: 
+       ggrepel, ## plot: geom_text_repel
+       stringi,tidytext,stopwords, ## text-data
+       tidymodels,finetune) 
+
 
 set.seed(666)
 
@@ -461,9 +468,9 @@ h_test <- hombre[-train_ind, ]
 
 # XGBoost
 
-m_train_recipe <- recipe(formula= ~ . , data=m_train) %>% ## En recip se detallan los pasos que se aplicarán a un conjunto de datos para prepararlo para el análisis de datos.
-  update_role(c("vivienda", "hogar", "ind"), new_role = "property_id")
-test_recipe
+m_train_recipe <- recipe(formula= tiempo_labores_no_rem~ . , data=m_train) %>% ## En recip se detallan los pasos que se aplicarán a un conjunto de datos para prepararlo para el análisis de datos.
+  update_role(c("vivienda", "hogar", "ind"), new_role = "id")
+m_train_recipe
 
 ## set n-folds
 set.seed(234)
@@ -485,7 +492,7 @@ xgb_spec <- boost_tree(trees = 1000,
 xgb_spec
 
 ## workflow
-xgb_word_wf <- workflow(m_train, xgb_spec)
+xgb_word_wf <- workflow(m_train_recipe, xgb_spec)
 
 ## tunne hiperparametros
 xgb_grid <- grid_max_entropy(tree_depth(c(5L, 10L)),
@@ -498,7 +505,7 @@ xgb_grid
 
 ## estimate model
 tic()
-xgb_word_rs <- tune_race_anova(object = xgb_word_wf,
+xgb_word_rs <- tune_trace_anova(object = xgb_word_wf,
                                resamples = db_folds,
                                grid = xgb_grid,
                                metrics = db_metrics,
