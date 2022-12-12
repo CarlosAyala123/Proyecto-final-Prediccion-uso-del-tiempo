@@ -535,11 +535,19 @@ xgb_last
 
 ## predecir :)
 
+hongo <- predict(hongo$modelo_01, hongo$test_mat)
+
+
 xgb_word_wf_test <- workflow(m_test_recipe, xgb_spec)
 
-xgb_last_m_test <- xgb_word_wf_test %>%
+xgb_last_m_tes <- xgb_word_wf_test %>%
   finalize_workflow(select_best(xgb_word_rs, "rmse")) 
-xgb_last_m_test
+xgb_last
+
+xgb_last_test <- xgb_word_wf_test %>%
+  finalize_workflow(select_best(xgb_word_rs, "rmse")) %>%
+  last_fit(split)
+xgb_last_test
 
 predictions_test <- collect_predictions(xgb_last_m_test)
 predictions_t <- subset(predictions_test, select = c("price", ".pred"))
