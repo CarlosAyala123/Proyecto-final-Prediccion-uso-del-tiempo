@@ -86,7 +86,7 @@ sum(is.na(C_7_1$total_m))
 #C_8 sacamos el tiempo no remunerado del hogar
 C_8<-read.csv("Data/ENUT_C8/ENUT_C8.csv", header = T)
 colnames(C_8) <- tolower(colnames(C_8))
-skim(C_8)
+
 C_8 <- subset(C_8, select = c(directorio, secuencia_p, orden,
                               p1143s1,p1143s2,p1143s3,p1143s4,p1143s5, p1143s1a1,p1143s1a2,
                               p1143s2a1, p1143s2a2, p1143s3a1, p1143s3a2, p1143s4a1, p1143s4a2,
@@ -102,21 +102,45 @@ C_8 <- subset(C_8, select = c(directorio, secuencia_p, orden,
                               p1140s2a3, p1140s2a4, p1140s3a1, p1140s3a2, p1140s4a1, p1140s4a2,
                               p1140s4a3, p1140s4a4,p1140s5a1, p1140s5a2, p1140s5a3,p1140s5a4,
                               p1140s6a1, p1140s6a2, p1140s7a1,p1140s7a2))
-names <- c( vivienda = "directorio", hogar = "secuencia_p", individuo = "orden"  )
+names <- c( vivienda = "directorio", hogar = "secuencia_p", ind = "orden"  )
 C_8 <- rename(C_8, names )
 
-Alimentos = c( C_8$p1143s1,C_8$p1143s2,C_8$p1143s3,C_8$p1143s4,C_8$p1143s5)
-for(i in Alimentos){
-  i[is.na(i)==T]<-0
+Horas <- c( "p1143s1a1", "p1143s2a1","p1143s3a1","p1143s4a1","p1142s1a1", "p1142s2a1","p1142s3a1",
+            "p1142s4a1", "p1136s1a1", "p1136s2a1", "p1136s3a1", "p1136s4a1", "p1136s5a1", "p1136s6a1", "p1136s7a1",
+            "p1141s1a1","p1141s2a1", "p1141s3a1", "p1141s4a1", "p1140s1a1", "p1140s1a3", "p1140s2a1", "p1140s2a3",
+            "p1140s3a1", "p1140s4a1", "p1140s4a3", "p1140s5a1", "p1140s5a3", "p1140s6a1", "p1140s7a1")
+
+vars_hora <- c(paste0("p1143s",1:4,"a1"), paste0("p1142s",1:4,"a1"),paste0("p1136s",1:7,"a1"),paste0("p1141s",1:4,"a1")
+               ,paste0("p1140s",1:7,"a1"),"p1140s1a3","p1140s2a3","p1140s4a3","p1140s5a3"  )
+
+for (i in Horas){
+  C_8[,i]<- C_8[,i]*60 
+  
 }
 
-  
+C_8 <- mutate_at(C_8, c(vars_hora), ~replace(., is.na(.), 0))
+
+vars_min <- c(paste0("p1143s",1:4,"a2"), paste0("p1142s",1:4,"a2"),paste0("p1136s",1:7,"a2"),paste0("p1141s",1:4,"a2")
+              ,paste0("p1140s",1:7,"a2"),"p1140s1a4","p1140s2a4","p1140s4a4","p1140s5a4"  )
+
+C_8 <- mutate_at(C_8, c(vars_min), ~replace(., is.na(.), 0))
+
    
+C_8$H_tot<- (C_8$p1143s1a1+C_8$p1143s2a1+C_8$p1143s3a1
+              +C_8$p1143s4a1+C_8$p1142s1a1+C_8$p1142s2a1
+                 +C_8$p1142s3a1+C_8$p1142s4a1+C_8$p1136s1a1+C_8$p1136s2a1+C_8$p1136s3a1+C_8$p1136s4a1+
+                   C_8$p1136s5a1+C_8$p1136s6a1+C_8$p1136s7a1+C_8$p1141s1a1+C_8$p1141s2a1+C_8$p1141s3a1+
+                   C_8$p1141s4a1+C_8$p1140s1a1+C_8$p1140s1a3+C_8$p1140s2a1+C_8$p1140s2a3+C_8$p1140s3a1+
+                   C_8$p1140s4a1+C_8$p1140s4a3+C_8$p1140s5a1+C_8$p1140s5a3+C_8$p1140s6a1+C_8$p1140s7a1)
 
+C_8$m <- (C_8$p1143s2a2+C_8$p1143s1a2+C_8$p1143s3a2+C_8$p1143s4a2+C_8$p1142s2a2+C_8$p1142s3a2+C_8$p1142s4a2+
+            C_8$p1136s1a2+C_8$p1136s2a2+C_8$p1136s3a2+C_8$p1136s4a2+C_8$p1136s5a2+C_8$p1136s6a2+C_8$p1136s7a2+
+            C_8$p1141s1a2+ C_8$p1141s2a2+C_8$p1141s3a2+C_8$p1141s4a2+ C_8$p1140s1a2+C_8$p1140s1a4+C_8$p1140s2a2+
+            C_8$p1140s2a4+C_8$p1140s3a2+C_8$p1140s4a2+ C_8$p1140s4a4+C_8$p1140s5a2+C_8$p1140s5a4+ C_8$p1140s6a2+
+            C_8$p1140s7a2)
 
+C_8$Tiempo_labores_no_rem <-(C_8$H_tot+C_8$m)
 
+C_8<-subset(C_8, select = c(vivienda,hogar,ind,Tiempo_labores_no_rem ))
 
-
-
-
-
+write.csv(C_8,file = "Data/c_8.csv")
