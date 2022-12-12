@@ -424,6 +424,18 @@ hombre$mujer<-NULL
 
 
 
+#>>>Splitting the sample
+
+## 75% of the sample size
+smp_size <- floor(0.75 * nrow(df))
+
+## set the seed to make your partition reproducible
+set.seed(10101)
+
+train_ind <- sample(seq_len(nrow(df)), size = smp_size)
+
+train <- df[train_ind, ]
+test <- df[-train_ind, ]
 
 ## Implementación modelo XGBoost
 c1<- c(names(test))
