@@ -459,6 +459,7 @@ train_ind <- sample(seq_len(nrow(hombre)), size = smp_size)
 
 h_train <- hombre[train_ind, ]
 h_test <- hombre[-train_ind, ]
+
 ## Implemetación op XGBoost
 
 tr_m<-data.matrix(subset(m_train,select=c(-vivienda,-hogar,-ind,-tiempo_labores_no_rem)))
@@ -506,8 +507,19 @@ nround = best_rmse_index
 set.seed(best_seednumber)
 xg_mod_m <- xgboost(data = dtest_m, params = best_param, nround = nround, verbose = F)
 
+xg_mod_m
+
+saveRDS(xg_mod_m, file = "Data/xg_mod_m.rds")
+
+
+
 # Check error in testing data
 thatm_xg <- predict(xg_mod_m, dtest_m)
+
+thatm_xg
+
+write.csv(thatm_xg,file="Data/thatm_xg.csv",row.names=F)
+
 (MSE_xgb <- mean((thatm_xg - m_test$tiempo_labores_no_rem)^2))
 
 ## Implementación modelo XGBoost
