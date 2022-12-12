@@ -410,8 +410,11 @@ base <- base[!is.na(base$leer_escribir),]
 skim(base)
 
 write.csv(base, file = "Data/base_final_na.csv")
+
+
 base <- read.csv(file = "Data/base_final_na.csv", header = T)
 base$X<-NULL
 
+table(base$mujer)
 
 
