@@ -5,7 +5,7 @@
 rm(list=ls())
 
 require(pacman)
-p_load(skimr, reshape)
+p_load(skimr, reshape, tidyr)
 
 ## Base 1
 
@@ -34,6 +34,8 @@ c_1 <- rename(c_1, names) ## asignar nuevo nombre a las variables
 
 c_1$cabecera[c_1$cabecera==2]<-0
 
+skim(c_1)
+
 write.csv(c_1, file = "Data/c_1.csv", col.names = T)
 
 
@@ -59,8 +61,14 @@ c_1$p1176s11[c_1$p1176s11==2]<-0
 c_1$p1176s12[c_1$p1176s12==2]<-0
 c_1$p5093[c_1$p5093==2]<-0
 
-c_1 <- subset(c_1, select = c(directorio, secuencia_p, p5090, p1103s1, p1103s2,
-                              p1103s3, p1176s1, p1176s2, p1176s3, p1176s4, p1176s5,
+c_1$subsidio[c_1$p1103s1==1]<-1
+c_1$subsidio[c_1$p1103s2==1]<-1
+c_1$subsidio[c_1$p1103s3==1]<-1
+c_1$subsidio[is.na(c_1$subsidio)==T]<-0
+
+
+c_1 <- subset(c_1, select = c(directorio, secuencia_p, p5090, subsidio,
+                              p1176s1, p1176s2, p1176s3, p1176s4, p1176s5,
                               p1176s6, p1176s7, p1176s9, p1176s10, p1176s11, p1176s12,
                               p5093)) ## dejar las variables a usar
 
@@ -70,6 +78,8 @@ names <- c(directorio = "vivienda", secuencia_p = "hogar", p5090 = "tipo_ocupaci
            p1176s11 = "automovil", p1176s12 = "motocicleta", p5093 = "servicio_dom") ## vercotr de nombres
 
 c_1 <- rename(c_1, names) ## asignar nuevo nombre a las variables
+
+skim(c_1)
 
 write.csv(c_1, file = "Data/c_2.csv", col.names = T)
 
@@ -89,6 +99,8 @@ c_1$p5762[c_1$p5762==2]<-0
 c_1$p5762[c_1$p5762==3]<-0
 c_1$p5754[c_1$p5754==2]<-0
 c_1$p5754[c_1$p5754==3]<-0
+
+c_1<- c_1 %>% drop_na(p1173_1) %>% drop_na(p426) %>% drop_na(p1172) %>% drop_na(p5762) %>% drop_na(p5754)
 
 c_1 <- subset(c_1, select = c(directorio, secuencia_p, orden, p6040, p6020, p1173, p1173_1, p426,
                               p1172, p5762, p5754)) ## dejar las variables a usar
@@ -113,9 +125,12 @@ colnames(c_1) <- tolower(colnames(c_1))
 c_1$p6090[c_1$p6090==9]<-0
 c_1$p6090[c_1$p6090==2]<-0
 c_1$p1166[c_1$p1166==2]<-0
+
+vars <- c("p1166s1a1", "p1166s1a2")
+c_1 <- mutate_at(c_1, vars, ~replace(., is.na(.), 0))
+
 c_1$p1166s1a1<- c_1$p1166s1a1*60
 c_1$min_at_medica<-c_1$p1166s1a1+c_1$p1166s1a2
-c_1$min_at_medica[is.na(c_1$min_at_medica)==T]<-0
 c_1$enfermedad[c_1$p1170s1==1]<-1
 c_1$enfermedad[c_1$p1170s2==1]<-1
 c_1$enfermedad[c_1$p1170s3==1]<-1
@@ -148,18 +163,20 @@ colnames(c_1) <- tolower(colnames(c_1))
 
 c_1$p1165[c_1$p1165==2]<-0
 c_1$p1178s1[is.na(c_1$p1178s1)==T]<-0
+c_1$p1178s1[c_1$p1178s1==2]<-0
 
-vars <- c(c_1$p1162s1a1, c_1$p1162s2a1, c_1$p1162s3a1, c_1$p1162s4a1, c_1$p1162s5a1, c_1$p1162s6a1, c_1$p1178s1)
+vars <- c("p1162s1a1", "p1162s2a1", "p1162s3a1", "p1162s4a1", "p1162s5a1", "p1162s6a1", "p1178s1")
 
 for (i in vars){
-  i[is.na(i)==T]<-0
+  c_1[,i]<- c_1[,i]*60
 }
+
+vars <- c(paste0("p1162s",1:6,"a1"), paste0("p1162s",1:6,"a2"))
+c_1 <- mutate_at(c_1, vars, ~replace(., is.na(.), 0))
+
 
 c_1$tiempo_esparcimiento_ninos <- c_1$p1162s1a1 + c_1$p1162s2a1 + c_1$p1162s3a1 + c_1$p1162s4a1 + c_1$p1162s5a1 + c_1$p1162s6a1 +
   c_1$p1162s1a2 + c_1$p1162s2a2 + c_1$p1162s3a2 + c_1$p1162s4a2 + c_1$p1162s5a2 + c_1$p1162s6a2
-
-c_1$tiempo_esparcimiento_ninos[is.na(c_1$tiempo_esparcimiento_ninos)==T]<-0
-
 
 c_1 <- subset(c_1, select = c(directorio, secuencia_p, orden, p1165, p1178s1, 
                               tiempo_esparcimiento_ninos)) ## dejar las variables a usar
@@ -184,29 +201,25 @@ c_1$p6160[c_1$p6160==2]<-0
 c_1$p1160s1a1<- c_1$p1160s1a1*60
 c_1$tiempo_estudio<-c_1$p1160s1a1+c_1$p1160s1a2
 c_1$tiempo_estudio[is.na(c_1$tiempo_estudio)==T]<-0
+c_1 <- c_1[!is.na(c_1$p6210),] #### quitar na
 
-for (i in 1:138395){
-  if (is.na(c_1$p6210[i])==F){
-    c_1$grado_aprobado[i]=c_1$p6210[i]
-  }
-}
-
-vars <- c(c_1$p1153s1a1, c_1$p1153s2a1, c_1$p1153s3a1, c_1$p1153s4a1, c_1$p1153s5a1, c_1$p1153s6a1, c_1$p1178s1)
+vars <- c("p1153s1a1", "p1153s2a1", "p1153s3a1", "p1153s4a1", "p1153s5a1", "p1153s6a1")
 
 for (i in vars){
-  i <- i*60
+  c_1[,i]<- c_1[,i]*60
 }
+
+vars <- c(paste0("p1153s",1:6,"a1"), paste0("p1153s",1:6,"a2"))
+c_1 <- mutate_at(c_1, vars, ~replace(., is.na(.), 0))
 
 c_1$tiempo_esparcimiento <- c_1$p1153s1a1 + c_1$p1153s2a1 + c_1$p1153s3a1 + c_1$p1153s4a1 + c_1$p1153s5a1 + c_1$p1153s6a1 +
   c_1$p1153s1a2 + c_1$p1153s2a2 + c_1$p1153s3a2 + c_1$p1153s4a2 + c_1$p1153s5a2 + c_1$p1153s6a2
 
-c_1$tiempo_esparcimiento[is.na(c_1$tiempo_esparcimiento)==T]<-0
-
-
-c_1 <- subset(c_1, select = c(directorio, secuencia_p, orden, p6160, tiempo_estudio, grado_aprobado, 
+c_1 <- subset(c_1, select = c(directorio, secuencia_p, orden, p6160, tiempo_estudio, p6210, 
                               tiempo_esparcimiento)) ## dejar las variables a usar
 
-names <- c(directorio = "vivienda", secuencia_p = "hogar", orden = "ind", p6160 = "leer_escribir") ## vercotr de nombres
+names <- c(directorio = "vivienda", secuencia_p = "hogar", orden = "ind", p6160 = "leer_escribir",
+           p6210 = "grado_aprobado") ## vercotr de nombres
 
 c_1 <- rename(c_1, names) ## asignar nuevo nombre a las variables
 
