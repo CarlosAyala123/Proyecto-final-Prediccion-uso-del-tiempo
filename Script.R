@@ -414,9 +414,6 @@ base <- base[!is.na(base$ind),] #### quitar na
 base <- base[!is.na(base$tipo_vivienda),]
 base <- base[!is.na(base$leer_escribir),]
 
-
-#base <- na.omit(base)
-
 skim(base)
 
 write.csv(base, file = "Data/base_final_na.csv")
@@ -427,6 +424,7 @@ base$X<-NULL
 
 table(base$mujer)
 
+set.seed(666)
 
 # Mujer
 
@@ -460,7 +458,7 @@ train_ind <- sample(seq_len(nrow(hombre)), size = smp_size)
 h_train <- hombre[train_ind, ]
 h_test <- hombre[-train_ind, ]
 
-
+rm(base, hombre, mujer, smp_size, train_ind, filenames, ldf, a,b,c,d,e,f,g)
 
 ## Implementación modelo XGBoost
 
@@ -472,8 +470,11 @@ m_train_recipe <- recipe(formula= tiempo_labores_no_rem~ . , data=m_train) %>% #
   update_role(c("vivienda", "hogar", "ind"), new_role = "id")
 m_train_recipe
 
+m_test_recipe <- recipe(formula= tiempo_labores_no_rem~ . , data=m_test) %>% ## En recip se detallan los pasos que se aplicarán a un conjunto de datos para prepararlo para el análisis de datos.
+  update_role(c("vivienda", "hogar", "ind"), new_role = "id")
+m_test_recipe
+
 ## set n-folds
-set.seed(234)
 db_folds <- vfold_cv(data=m_train, v=10 , strata=NULL)
 db_folds
 
@@ -505,7 +506,7 @@ xgb_grid
 
 ## estimate model
 tic()
-xgb_word_rs <- tune_trace_anova(object = xgb_word_wf,
+xgb_word_rs <- tune_race_anova(object = xgb_word_wf,
                                resamples = db_folds,
                                grid = xgb_grid,
                                metrics = db_metrics,
@@ -515,6 +516,8 @@ toc()
 saveRDS(xgb_word_rs, file = "Data/xgb_word_rs_mujer.rds")
 
 ##=== **3. Desempeño del modelo** ===##
+
+xgb_word_rs <- import("Data/xgb_word_rs_mujer.rds")
 
 ## plot model
 plot_race(xgb_word_rs) + labs(title = "Gráfico 1: Grafico de RMSE ",
@@ -530,9 +533,28 @@ xgb_last <- xgb_word_wf %>%
 
 xgb_last
 
-predictions %>%
-  autoplot() + theme_light()
+## predecir :)
 
+xgb_word_wf_test <- workflow(m_test_recipe, xgb_spec)
+
+xgb_last_m_test <- xgb_word_wf_test %>%
+  finalize_workflow(select_best(xgb_word_rs, "rmse")) 
+xgb_last_m_test
+
+predictions_test <- collect_predictions(xgb_last_m_test)
+predictions_t <- subset(predictions_test, select = c("price", ".pred"))
+
+pred <- predictions_test[1:5000,]
+
+id <- test$property_id
+
+pred$property_id<-id
+
+pred <- subset(pred, select=c("property_id", ".pred"))
+
+colnames(pred)[2]="price"
+
+write.csv(pred, file ="predictions_ayala_contreras_meneses.csv")
 
 
 
