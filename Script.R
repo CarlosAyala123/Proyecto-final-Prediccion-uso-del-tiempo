@@ -106,16 +106,13 @@ names <- c( vivienda = "directorio", hogar = "secuencia_p", individuo = "orden" 
 C_8 <- rename(C_8, names )
 
 Alimentos = c( C_8$p1143s1,C_8$p1143s2,C_8$p1143s3,C_8$p1143s4,C_8$p1143s5)
-for(i in 1:5){
-  for (j in 1:126753){
-    if(is.na(Alimentos[i][j])==T){
-      Alimentos[i][j] = 0
-    }
-  }
- 
+for(i in Alimentos){
+  i[is.na(i)==T]<-0
+}
+
   
    
-}
+
 
 
 
