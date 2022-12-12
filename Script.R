@@ -368,6 +368,8 @@ C_8<-subset(C_8, select = c(vivienda,hogar,ind,Tiempo_labores_no_rem ))
 
 write.csv(C_8,file = "Data/c_8.csv")
 
+
+
 ## merge de la base
 
 filenames <- list.files("Data", pattern="*.csv", full.names=TRUE)
@@ -394,6 +396,8 @@ g$X<-NULL
 base <- merge(x = a, y = b, all=T)
 base <- merge(x = base, y = c, all=T)
 base <- merge(x = merge(x = merge(x = base, y = d, all=T), y = f, all=T), y = g, all=T)
+
+colnames(base) <- tolower(colnames(base))
 
 write.csv(base, file = "Data/base_final.csv")
 base <- read.csv(file = "Data/base_final.csv", header = T)
@@ -457,6 +461,10 @@ h_test <- hombre[-train_ind, ]
 
 # XGBoost
 
+m_train_recipe <- recipe(formula= ~ . , data=m_train) %>% ## En recip se detallan los pasos que se aplicarán a un conjunto de datos para prepararlo para el análisis de datos.
+  update_role(c("vivienda", "hogar", "ind"), new_role = "property_id")
+test_recipe
+
 ## set n-folds
 set.seed(234)
 db_folds <- vfold_cv(data=m_train, v=10 , strata=NULL)
@@ -477,7 +485,7 @@ xgb_spec <- boost_tree(trees = 1000,
 xgb_spec
 
 ## workflow
-xgb_word_wf <- workflow(train_recipe, xgb_spec)
+xgb_word_wf <- workflow(m_train, xgb_spec)
 
 ## tunne hiperparametros
 xgb_grid <- grid_max_entropy(tree_depth(c(5L, 10L)),
