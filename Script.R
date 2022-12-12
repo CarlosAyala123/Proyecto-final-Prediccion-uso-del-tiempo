@@ -415,9 +415,16 @@ base <- read.csv(file = "Data/base_final_na.csv", header = T)
 base$X<-NULL
 
 table(base$mujer)
->>>>>>> 3fdb47b4e42048b822a87184bd35fdb0a2fac6f2
 
-<<<<<<< HEAD
+mujer <- subset(base, mujer == 1)
+mujer$mujer<-NULL
+
+hombre <- subset(base, mujer == 0)
+hombre$mujer<-NULL
+
+
+
+
 ## Implementación modelo XGBoost
 c1<- c(names(test))
 c2<- c(names(training_set))
@@ -489,4 +496,8 @@ xgb_last
 
 predictions %>%
   autoplot() + theme_light()
-=======
+
+
+
+
+
