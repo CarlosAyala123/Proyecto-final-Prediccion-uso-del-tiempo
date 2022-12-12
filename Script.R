@@ -522,9 +522,72 @@ write.csv(thatm_xg,file="Data/thatm_xg.csv",row.names=F)
 
 (MSE_xgb <- mean((thatm_xg - m_test$tiempo_labores_no_rem)^2))
 
-## Implementación modelo XGBoost
+## Implementación modelo XGBoost hombre
+tr_h<-data.matrix(subset(h_train,select=c(-vivienda,-hogar,-ind,-tiempo_labores_no_rem)))
+dtrain_h <- xgb.DMatrix(data = tr_h,label = h_train$tiempo_labores_no_rem)
 
-## Mujer
+ts_h <- data.matrix(subset(h_test,select=c(-vivienda,-hogar,-ind,-tiempo_labores_no_rem)))
+dtest_h <-  xgb.DMatrix(data = ts_h,label=h_test$tiempo_labores_no_rem)
+
+best_param = list()
+best_seednumber = 1234
+best_rmse = Inf
+best_rmse_index = 0
+
+set.seed(123)
+for (iter in 1:100) {
+  param <- list(objective = "reg:linear",
+                eval_metric = "rmse",
+                max_depth = sample(6:10, 1),
+                eta = runif(1, .01, .3), # Learning rate, default: 0.3
+                subsample = runif(1, .6, .9),
+                colsample_bytree = runif(1, .5, .8), 
+                min_child_weight = sample(1:40, 1),
+                max_delta_step = sample(1:10, 1)
+  )
+  cv.nround = 1000
+  cv.nfold = 10
+  seed.number = sample.int(10000, 1)[[1]]
+  set.seed(seed.number)
+  mdcv <- xgb.cv(data=dtrain_h, params = param, nthread=6, 
+                 nfold=cv.nfold, nrounds=cv.nround,
+                 verbose = T, early.stop.round=8, maximize=FALSE)
+  min_rmse_index  <-  mdcv$best_iteration
+  min_rmse <-  mdcv$evaluation_log[min_rmse_index]$test_rmse_mean
+  
+  if (min_rmse < best_rmse) {
+    best_rmse <- min_rmse
+    best_rmse_index <- min_rmse_index
+    best_seednumber <- seed.number
+    best_param <- param
+  }
+}
+
+# The best index (min_rmse_index) is the best "nround" in the model
+nround = best_rmse_index
+set.seed(best_seednumber)
+xg_mod_h <- xgboost(data = dtest_h, params = best_param, nround = nround, verbose = F)
+
+xg_mod_h
+
+saveRDS(xg_mod_h, file = "Data/xg_mod_m.rds")
+
+
+
+# Check error in testing data
+thath_xg <- predict(xg_mod_h, dtest_h)
+
+thath_xg
+
+write.csv(thath_xg,file="Data/thath_xg.csv",row.names=F)
+
+(MSE_xgbh <- mean((thath_xg - h_test$tiempo_labores_no_rem)^2))
+
+
+
+
+
+
 
 # XGBoost
 
