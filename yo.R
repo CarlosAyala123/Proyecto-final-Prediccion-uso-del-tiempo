@@ -227,3 +227,5 @@ skim(c_1)
 
 write.csv(c_1, file = "Data/c_6.csv", col.names = T)
 
+### Juntar las bases
+

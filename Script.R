@@ -369,6 +369,7 @@ C_8<-subset(C_8, select = c(vivienda,hogar,ind,Tiempo_labores_no_rem ))
 write.csv(C_8,file = "Data/c_8.csv")
 
 
+<<<<<<< HEAD
 ## Implementación modelo XGBoost
 c1<- c(names(test))
 c2<- c(names(training_set))
@@ -440,5 +441,54 @@ xgb_last
 
 predictions %>%
   autoplot() + theme_light()
+=======
+## merge de la base
+
+filenames <- list.files("Data", pattern="*.csv", full.names=TRUE)
+ldf <- lapply(filenames, read.csv)
+names(ldf) <- substr(filenames, 6, 30)
+
+a<-ldf$c_1.csv
+b<-ldf$c_2.csv
+c<-ldf$c_3.csv
+d<-ldf$c_4.csv
+e<-ldf$c_5.csv
+f<-ldf$c_6.csv
+g<-ldf$c_8.csv
+
+a$X<-NULL
+b$X<-NULL
+c$X<-NULL
+d$X<-NULL
+e$X<-NULL
+f$X<-NULL
+g$X<-NULL
+
+
+base <- merge(x = a, y = b, all=T)
+base <- merge(x = base, y = c, all=T)
+base <- merge(x = merge(x = merge(x = base, y = d, all=T), y = f, all=T), y = g, all=T)
+
+write.csv(base, file = "Data/base_final.csv")
+base <- read.csv(file = "Data/base_final.csv", header = T)
+base$X<-NULL
+
+base <- base[!is.na(base$ind),] #### quitar na
+base <- base[!is.na(base$tipo_vivienda),]
+base <- base[!is.na(base$leer_escribir),]
+
+
+#base <- na.omit(base)
+
+skim(base)
+
+write.csv(base, file = "Data/base_final_na.csv")
+
+
+base <- read.csv(file = "Data/base_final_na.csv", header = T)
+base$X<-NULL
+
+table(base$mujer)
+>>>>>>> 3fdb47b4e42048b822a87184bd35fdb0a2fac6f2
 
 
