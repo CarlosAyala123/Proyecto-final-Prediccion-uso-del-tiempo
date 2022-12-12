@@ -367,3 +367,38 @@ C_8$Tiempo_labores_no_rem <-(C_8$H_tot+C_8$m)
 C_8<-subset(C_8, select = c(vivienda,hogar,ind,Tiempo_labores_no_rem ))
 
 write.csv(C_8,file = "Data/c_8.csv")
+
+
+## merge de la base
+
+filenames <- list.files("Data", pattern="*.csv", full.names=TRUE)
+ldf <- lapply(filenames, read.csv)
+names(ldf) <- substr(filenames, 6, 30)
+
+a<-ldf$c_1.csv
+b<-ldf$c_2.csv
+c<-ldf$c_3.csv
+d<-ldf$c_4.csv
+e<-ldf$c_5.csv
+f<-ldf$c_6.csv
+g<-ldf$c_8.csv
+
+a$X<-NULL
+b$X<-NULL
+c$X<-NULL
+d$X<-NULL
+e$X<-NULL
+f$X<-NULL
+g$X<-NULL
+
+
+base <- merge(x = a, y = b, all=T)
+base <- merge(x = base, y = c, all=T)
+base <- merge(x = merge(x = merge(x = merge(x = base, y = d, all=T), y = e, all=T), y = f, all=T), y = g, all=T)
+
+write.csv(base, file = "Data/base_final.csv")
+
+skim(base)
+
+
+
