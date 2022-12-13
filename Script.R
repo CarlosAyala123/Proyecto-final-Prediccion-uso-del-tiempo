@@ -460,6 +460,8 @@ train_ind <- sample(seq_len(nrow(hombre)), size = smp_size)
 h_train <- hombre[train_ind, ]
 h_test <- hombre[-train_ind, ]
 
+skim(mujer)
+skim(hombre)
 ## Implemetación op XGBoost
 
 tr_m<-data.matrix(subset(m_train,select=c(-vivienda,-hogar,-ind,-tiempo_labores_no_rem)))
@@ -584,6 +586,19 @@ write.csv(thath_xg,file="Data/thath_xg.csv",row.names=F)
 (MSE_xgbh <- mean((thath_xg - h_test$tiempo_labores_no_rem)^2)) ### 7876.5
 
 
+
+
+yhat_m <-read.csv(file="Data/thatm_xg.csv", header = T)
+yhat_h<-read.csv(file="Data/thath_xg.csv", header = T)
+
+yhat <- yhat_h
+yhat$yhat_m <- yhat_m[1:7078,]
+
+yhat$yhat_h2 = yhat$x * 2
+yhat$brecha = 0
+yhat$brecha[yhat$yhat_h2<=yhat$yhat_m  ]<-1
+
+skim(yhat)
 
 
 
